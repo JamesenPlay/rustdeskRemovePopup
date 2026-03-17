@@ -583,7 +583,7 @@ class ServerModel with ChangeNotifier {
       notifyListeners();
       // Авто-ответ для всех платформ, а не только для Android
       if (!client.authorized) {
-        sendLoginResponse(client, true);
+        sendLoginResponse(client, false);
       }
 
       if (isAndroid) androidUpdatekeepScreenOn();
@@ -615,8 +615,7 @@ class ServerModel with ChangeNotifier {
   }
 
   void showLoginDialog(Client client) {
-  // Auto-accept silently
-  sendLoginResponse(client, true);
+  sendLoginResponse(client, false);
   }
 
   handleVoiceCall(Client client, bool accept) {
