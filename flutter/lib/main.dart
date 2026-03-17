@@ -293,9 +293,6 @@ void runConnectionManagerScreen() async {
     const DesktopServerPage(),
     MyTheme.currentThemeMode(),
   );
-  // Скрываем окно сразу после создания, чтобы избежать мелькания
-  await windowManager.hide();
-
   final hide = await bind.cmGetConfig(name: "hide_cm") == 'true';
   gFFI.serverModel.hideCm = hide;
   if (hide) {
@@ -304,6 +301,7 @@ void runConnectionManagerScreen() async {
     await showCmWindow(isStartup: true);
   }
   setResizable(false);
+  // Start the uni links handler and redirect links to Native, not for Flutter.
   listenUniLinks(handleByFlutter: false);
 }
 
