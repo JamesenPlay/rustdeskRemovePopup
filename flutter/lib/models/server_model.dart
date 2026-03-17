@@ -581,10 +581,10 @@ class ServerModel with ChangeNotifier {
       }
       scrollToBottom();
       notifyListeners();
-      // Авто-ответ для всех платформ, а не только для Android
-      if (!client.authorized) {
-        sendLoginResponse(client, false);
-      }
+      
+      //if (!client.authorized) {
+      //  sendLoginResponse(client, false);
+      // }
 
       if (isAndroid) androidUpdatekeepScreenOn();
     } catch (e) {
@@ -615,7 +615,7 @@ class ServerModel with ChangeNotifier {
   }
 
   void showLoginDialog(Client client) {
-  sendLoginResponse(client, false);
+  // sendLoginResponse(client, false);
   }
 
   handleVoiceCall(Client client, bool accept) {
