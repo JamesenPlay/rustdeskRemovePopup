@@ -170,10 +170,7 @@ class ServerModel with ChangeNotifier {
             }
           } else {
             _zeroClientLengthCounter = 0;
-            // Показываем окно, только если есть авторизованный клиент и разрешён показ
-            if (_clients.any((c) => c.authorized) && !hideCm) {
-              await windowManager.show();
-            }
+            
           }
         }
       }
@@ -605,16 +602,7 @@ class ServerModel with ChangeNotifier {
     Future.delayed(Duration.zero, () async {
       //Закоментировал if (!hideCm) windowOnTop(null);
     });
-        // Only do the hidden task when on Desktop.
-    if (client.authorized && isDesktop) {
-      cmHiddenTimer?.cancel();
-      cmHiddenTimer = Timer(Duration(milliseconds: 100), () async {
-        if (!hideCm) {
-          await windowManager.minimize();
-        }
-        cmHiddenTimer = null;
-      });
-    }
+     
     parent.target?.chatModel
         .updateConnIdOfKey(MessageKey(client.peerId, client.id));
   }
