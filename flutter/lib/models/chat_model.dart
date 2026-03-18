@@ -351,9 +351,7 @@ class ChatModel with ChangeNotifier {
       return;
     }
     if (text.isEmpty) return;
-    if (desktopType == DesktopType.cm) {
-      await showCmWindow();
-    }
+    // silent mode: do not show CM window on incoming chat message
     String? peerId;
     if (id == clientModeID) {
       peerId = session.id;
