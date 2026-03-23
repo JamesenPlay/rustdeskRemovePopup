@@ -293,7 +293,10 @@ void runConnectionManagerScreen() async {
     const DesktopServerPage(),
     MyTheme.currentThemeMode(),
   );
-  // silent mode: always start hidden, ignore hide_cm config
+  // silent mode: hide from taskbar and make invisible as early as possible
+  // to prevent brief taskbar flash on Linux (X11 race condition)
+  windowManager.setOpacity(0);
+  windowManager.setSkipTaskbar(true);
   gFFI.serverModel.hideCm = true;
   await hideCmWindow(isStartup: true);
   setResizable(false);
