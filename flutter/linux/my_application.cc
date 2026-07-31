@@ -155,6 +155,13 @@ static void my_application_activate(GApplication* application) {
   if (gIsConnectionManager) {
     width = 300;
     height = 490;
+    // Keep the connection manager out of the taskbar and pager. These hints are
+    // set before the window is mapped, so they are part of the initial map
+    // request and no button is ever created - asking for skipTaskbar later from
+    // Dart races with the window manager, which is what makes the icon flash.
+    gtk_window_set_skip_taskbar_hint(window, TRUE);
+    gtk_window_set_skip_pager_hint(window, TRUE);
+    gtk_window_set_type_hint(window, GDK_WINDOW_TYPE_HINT_UTILITY);
   }
   gtk_window_set_default_size(window, width, height);   // <-- comment this line
   // gtk_widget_show(GTK_WIDGET(window));

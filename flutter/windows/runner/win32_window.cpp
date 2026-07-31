@@ -172,8 +172,14 @@ bool Win32Window::CreateAndShow(const std::wstring& title,
   UINT dpi = FlutterDesktopGetDpiForMonitor(monitor);
   double scale_factor = dpi / 96.0;
 
-  HWND window = CreateWindow(
-      window_class, title.c_str(), WS_OVERLAPPEDWINDOW,
+  // A tool window is never given a taskbar button by the shell. Applying the
+  // style at creation time is what makes this reliable: DeleteTab() below can
+  // only remove a button that already exists, so on its own it leaves a window
+  // in which Explorer has drawn one.
+  DWORD extended_style = showOnTaskBar ? 0 : WS_EX_TOOLWINDOW;
+
+  HWND window = CreateWindowEx(
+      extended_style, window_class, title.c_str(), WS_OVERLAPPEDWINDOW,
       Scale(origin.x, scale_factor), Scale(origin.y, scale_factor),
       Scale(size.width, scale_factor), Scale(size.height, scale_factor),
       nullptr, nullptr, GetModuleHandle(nullptr), this);
@@ -183,16 +189,17 @@ bool Win32Window::CreateAndShow(const std::wstring& title,
   }
 
   if (!showOnTaskBar) {
-    // hide from taskbar
-    HRESULT hr;
-    ITaskbarList* pTaskbarList;
-    hr = CoCreateInstance(CLSID_TaskbarList, NULL, CLSCTX_INPROC_SERVER,IID_ITaskbarList,(void**)&pTaskbarList);
-    if (FAILED(hr)) {
-        return false;
+    // Belt and braces: also ask the shell to drop the tab, in case the window
+    // was registered before the style took effect. A failure here is not fatal
+    // for a tool window, so it must not abort window creation.
+    ITaskbarList* pTaskbarList = nullptr;
+    HRESULT hr = CoCreateInstance(CLSID_TaskbarList, NULL, CLSCTX_INPROC_SERVER,
+                                  IID_ITaskbarList, (void**)&pTaskbarList);
+    if (SUCCEEDED(hr) && pTaskbarList != nullptr) {
+      pTaskbarList->HrInit();
+      pTaskbarList->DeleteTab(window);
+      pTaskbarList->Release();
     }
-    hr = pTaskbarList->HrInit();
-    hr = pTaskbarList->DeleteTab(window);
-    hr = pTaskbarList->Release();
   }
 
   return OnCreate();
