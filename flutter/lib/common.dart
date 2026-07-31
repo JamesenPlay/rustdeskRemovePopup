@@ -736,6 +736,12 @@ Future<void> windowOnTop(int? id) async {
   if (!isDesktop) {
     return;
   }
+  // Silent mode: the connection manager must stay hidden. Chat messages and
+  // incoming voice calls raise the window through here without going via
+  // showCmWindow(), so the guard belongs at this level to cover both.
+  if (id == null && desktopType == DesktopType.cm) {
+    return;
+  }
   print("Bring window '$id' on top");
   if (id == null) {
     // main window
