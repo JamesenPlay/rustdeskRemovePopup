@@ -316,7 +316,10 @@ hideCmWindow({bool isStartup = false}) async {
     WindowOptions windowOptions = getHiddenTitleBarWindowOptions(
         size: kConnectionManagerWindowSizeClosedChat, skipTaskbar: true);
     windowManager.setOpacity(0);
-    await windowManager.setSkipTaskbar(true);
+    // skipTaskbar is applied through the options above and not by a separate
+    // call: on Windows the plugin creates its ITaskbarList3 inside the native
+    // waitUntilReadyToShow(), and setSkipTaskbar() dereferences that pointer
+    // without a null check, so calling it any earlier crashes the process.
     await windowManager.waitUntilReadyToShow(windowOptions, null);
     bind.mainHideDock();
     await windowManager.minimize();
